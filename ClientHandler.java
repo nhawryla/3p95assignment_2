@@ -12,13 +12,13 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.Inflater;
 
-public class ClientHandler implements Runnable{
+public class ClientHandler implements Runnable{ // thread class
 
-	private final String password = "hello";
+	private final String password = "hello"; // password for encryption
 	private final Socket client;
 	private final String path;
 	
-	ClientHandler(Socket socket, String path){
+	ClientHandler(Socket socket, String path){ // constructor to set client socket and path to the storage 
 		
 		this.client = socket;
 		this.path = path;
@@ -77,25 +77,23 @@ public class ClientHandler implements Runnable{
 		return output;
 	}
 	
-	public void run(){
-
-
+	public void run(){ // when the thread.start method is called this run method will be started
 		
 		DataInputStream dataInputStream = null;
 		DataOutputStream dataOutputStream = null;
 		
 		try {
-			dataInputStream = new DataInputStream(client.getInputStream());
+			dataInputStream = new DataInputStream(client.getInputStream()); // sets up input and output stream
 			dataOutputStream = new DataOutputStream(client.getOutputStream());
 
-			long enter = dataInputStream.readLong();
+			long enter = dataInputStream.readLong(); // reads in all of the starting data (clietn start time, name, size of file)
 			String name = dataInputStream.readUTF();
 			long size = dataInputStream.readLong();
 			long fileSize = dataInputStream.readLong();
 
 			System.out.println("printing file : " + name);
 			
-			byte[] buffer = new byte[(int) fileSize];
+			byte[] buffer = new byte[(int) fileSize]; // reads in the input stream to a byte array (the file we want to read in)
 			dataInputStream.read(buffer);
 
 			String text = decompress(buffer);
@@ -105,7 +103,7 @@ public class ClientHandler implements Runnable{
 			crc32.update(sum, 0, sum.length);
 			long length = crc32.getValue();
 			
-			if (integrityCheck(size,length)){
+			if (integrityCheck(size,length)){ // integrety check
 				
 				System.out.println("File size is correct for file : " + name);
 			} else {
@@ -113,18 +111,18 @@ public class ClientHandler implements Runnable{
 				System.out.println("File size is incorrect for file : " + name);
 			}
 			
-			FileWriter myWriter = new FileWriter(path+name);
+			FileWriter myWriter = new FileWriter(path+name); // creates new writer storing to the specified place in memory
 		    myWriter.write(text);
 		    myWriter.close();
 
-			long leave = System.currentTimeMillis();
+			long leave = System.currentTimeMillis(); // the end time of this method
 
 			System.out.println("File data : " + name + " ||  Transfer start time : " + enter + "     Transfer end time : " + leave + "     Total time for completion : " + (leave-enter));
 			
-		} catch (IOException e) {
+		} catch (IOException e) { // safely closes up all of the data streams when the thread is done
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (Exception e) {
+		} catch (Exception e) { 
             throw new RuntimeException(e);
         } finally {
             try { 

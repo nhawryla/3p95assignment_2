@@ -18,8 +18,8 @@ import java.util.zip.GZIPOutputStream;
 
 public class Client {
 
-	private final static String loadPath = "./load/";
-	private final String password = "hello";
+	private final static String loadPath = "./load/"; // File path where the files are loaded from
+	private final String password = "hello"; // encryption key
 	
 	private Socket socket;
 	private static DataOutputStream dataOutputStream = null;
@@ -27,39 +27,39 @@ public class Client {
 	
 	public void init() throws Exception{
 		
-		socket = new Socket("127.0.0.1", 8080);
+		socket = new Socket("127.0.0.1", 8080); // connect to host on local port
 		
-		dataInputStream = new DataInputStream(socket.getInputStream());
+		dataInputStream = new DataInputStream(socket.getInputStream()); // sets up output and input connections to server
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
 		
 		System.out.println("Connected to server");
 	}
 	
-	public void sendFile(String filePath) throws Exception{
+	public void sendFile(String filePath) throws Exception{ // main method for sending files
 		
-		dataOutputStream.writeLong(System.currentTimeMillis());
+		dataOutputStream.writeLong(System.currentTimeMillis()); // writes to the server the time of launching the method
 
-		File file = new File(filePath);
+		File file = new File(filePath); // gets file and file path 
 		Path path = Paths.get(filePath);
 		
 		System.out.println("Printing file " + file.getName());
 
 		//String contents = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		byte[] contents = Files.readAllBytes(path);
+		byte[] contents = Files.readAllBytes(path); // creates a byte array containing all bytes of the given file
 		
-		String text = new String(contents, StandardCharsets.UTF_8);
+		String text = new String(contents, StandardCharsets.UTF_8); // turns the byte array into its string form
 		byte[] sum = text.getBytes();
 		Checksum crc32 = new CRC32();
 		crc32.update(sum, 0, sum.length);//also important
 		long length = crc32.getValue();//THIS LINE
 		
-		dataOutputStream.writeUTF(file.getName());
-		dataOutputStream.writeLong(length);
-		dataOutputStream.writeLong(file.length());
-		text = encryption(text, 2, file.getName());
-		contents = compress(text);
+		dataOutputStream.writeUTF(file.getName()); // send file name to server
+		dataOutputStream.writeLong(length); 
+		dataOutputStream.writeLong(file.length()); // sends file length
+		text = encryption(text, 2, file.getName()); // ecnrypts text
+		contents = compress(text); //compresses text
 		//encrypt compress text
-		dataOutputStream.write(contents);
+		dataOutputStream.write(contents); // writes the contents to the server
 		
 		//dataOutputStream.write((encrypt(text,password)).getBytes());
 		
@@ -70,7 +70,7 @@ public class Client {
 		
 	}
 	
-	public void close(){
+	public void close(){ // when the client runs into an error safely closes down the ports
 		
 		if(socket != null){
 			
@@ -140,16 +140,16 @@ public class Client {
 
 	public static void main(String[] args) throws IOException{
 		
-		File path = new File(loadPath);
+		File path = new File(loadPath); // takes in all of the files in the specified path
 		File[] files = path.listFiles();
 
-		for (int z = 0; z < files.length; z++){
+		for (int z = 0; z < files.length; z++){ // loops through for each file a new client is made and connected that way threads can handle the files seperately 
 
 			Client client = new Client();
 			
 			try {
 
-				client.init();
+				client.init(); // initiates the new client and sends the next file in line to the server
 				client.sendFile(loadPath + files[z].getName());
 				
 			} catch (Exception e){
